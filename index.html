@@ -6,6 +6,7 @@
   <title>Pac-Man</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+  <link rel="icon" href="assets/pacman.svg" type="image/svg+xml">
   <link rel="stylesheet" href="css/style.css">
   <script>
     // Defined in <head> so it exists before ghost images can fail to load.
@@ -17,6 +18,7 @@
   </script>
 </head>
 <body>
+  <div class="layout">
   <main class="game">
     <header class="hud">
       <div class="hud__block">
@@ -40,6 +42,24 @@
       <img class="sprite sprite--ghost sprite--portrait" data-ghost="clyde" src="assets/ghost-ji-chang-wook.jfif"   alt="Ji Chang-wook"  title="Ji Chang-wook"  onerror="useClassicGhost(this, 'clyde')"  style="grid-area: 15 / 16 / span 1 / span 2">
       <img class="sprite sprite--pacman" src="assets/pacman.svg"      alt="Pac-Man" style="grid-area: 1 / 1">
       <div class="ready" style="grid-area: 18 / 11 / span 1 / span 8">READY!</div>
+      <div class="banner" id="banner" role="status" aria-live="polite"></div>
+
+      <!-- Intro card, hidden by js/director.js when Pac-Man starts moving -->
+      <div class="intro" id="intro">
+        <p class="intro__line intro__line--1">RUN AWAY FROM DISTRACTIONS,</p>
+        <p class="intro__line intro__line--2">CHASE YOUR RESPONSIBILITIES!</p>
+        <div class="intro__legend">
+          <div>
+            <h2 class="legend__title legend__title--chase">CHASE</h2>
+            <ul class="legend" data-legend="responsibility"></ul>
+          </div>
+          <div>
+            <h2 class="legend__title legend__title--avoid">AVOID</h2>
+            <ul class="legend" data-legend="distraction"></ul>
+          </div>
+        </div>
+        <p class="intro__start">PRESS AN ARROW KEY TO START</p>
+      </div>
     </section>
 
     <footer class="status">
@@ -53,8 +73,34 @@
     </footer>
   </main>
 
+  <aside class="panel" id="panel" aria-label="Game status">
+    <section class="panel__section">
+      <h2 class="panel__label">DIFFICULTY</h2>
+      <p class="panel__value" id="level-name">EASY</p>
+      <p class="panel__sub" id="level-number">LEVEL 1/5</p>
+      <div class="pips" aria-hidden="true"><span></span><span></span><span></span><span></span><span></span></div>
+    </section>
+    <section class="panel__section">
+      <h2 class="panel__label">NEXT LEVEL IN</h2>
+      <p class="panel__value panel__value--timer" id="level-countdown">0:30</p>
+      <div class="bar"><div class="bar__fill" id="level-bar"></div></div>
+    </section>
+    <section class="panel__section">
+      <h2 class="panel__label">EFFECTS</h2>
+      <ul class="effects" id="effects"></ul>
+    </section>
+    <section class="panel__section panel__section--legend">
+      <h2 class="legend__title legend__title--chase">CHASE</h2>
+      <ul class="legend" data-legend="responsibility"></ul>
+      <h2 class="legend__title legend__title--avoid">AVOID</h2>
+      <ul class="legend" data-legend="distraction"></ul>
+    </section>
+  </aside>
+  </div>
+
   <script src="js/board.js"></script>
   <script src="js/pacman.js"></script>
+  <script type="module" src="js/director.js"></script>
   <script type="module" src="js/ghosts.js"></script>
 </body>
 </html>

@@ -1,12 +1,13 @@
 // Starts the game server:  npm start  (then open http://localhost:3000)
-// Reads TYPESAFE_API_KEY from .env (see example.env). Without a key the
-// ghosts still move, using arcade target-seeking instead of Jev.
+// Reads TYPESAFE_API_KEY from .env (see example.env). Without a key the game
+// still works: ghosts use arcade target-seeking and items appear at random.
 
 import { createServer } from "node:http";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { TypeSafeClient } from "@typesafe-ai/sdk";
 import { createGhostController } from "../js/ghost-ai/index.js";
+import { createItemDirector } from "../js/game/item-director.js";
 import { createApp } from "./app.js";
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
@@ -21,7 +22,7 @@ const PORT = Number(process.env.PORT) || 3000;
 
 function makeClient() {
   if (process.env.TYPESAFE_API_KEY) return new TypeSafeClient();
-  console.warn("TYPESAFE_API_KEY is not set: ghosts will use arcade AI instead of Jev. See example.env.");
+  console.warn("TYPESAFE_API_KEY is not set: ghosts and items will use local rules instead of Jev. See example.env.");
   // Every request "fails", so the controller uses its local fallback moves.
   return { systemOne: () => Promise.reject(new Error("Jev disabled: no API key")) };
 }
@@ -29,17 +30,20 @@ function makeClient() {
 const client = makeClient();
 const online = client instanceof TypeSafeClient;
 
-let lastErrorLog = 0;
-function logJevError(error) {
-  // Ghosts ask several times a second; don't flood the console.
-  if (!online || Date.now() - lastErrorLog < 5000) return;
-  lastErrorLog = Date.now();
-  console.error(`Jev request failed, ghosts using fallback moves: ${error.message}`);
+// Ghosts ask several times a second; log each kind of failure at most every 5s.
+const lastErrorLog = {};
+function logJevError(what) {
+  return (error) => {
+    if (!online || Date.now() - (lastErrorLog[what] || 0) < 5000) return;
+    lastErrorLog[what] = Date.now();
+    console.error(`Jev request for ${what} failed, using local rules: ${error.message}`);
+  };
 }
 
 const app = createApp({
   root,
-  createController: (difficulty) => createGhostController({ client, difficulty, onError: logJevError }),
+  createController: (difficulty) => createGhostController({ client, difficulty, onError: logJevError("ghosts") }),
+  itemDirector: createItemDirector({ client, onError: logJevError("items") }),
 });
 
 const MAX_PORT_TRIES = 10;

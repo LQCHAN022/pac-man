@@ -28,17 +28,26 @@ function createController(difficulty) {
   };
 }
 
+// Stub item director: records what it was asked, always spawns homework at (1, 1).
+const itemCalls = [];
+const itemDirector = {
+  async decide(g) {
+    itemCalls.push(g);
+    return { kind: "homework", x: 1, y: 1 };
+  },
+};
+
 let server;
 let base;
 before(async () => {
-  server = createServer(createApp({ root, createController }));
+  server = createServer(createApp({ root, createController, itemDirector }));
   await new Promise((resolve) => server.listen(0, "127.0.0.1", resolve));
   base = `http://127.0.0.1:${server.address().port}`;
 });
 after(() => server.close());
 
-function post(body) {
-  return fetch(`${base}/api/ghosts`, {
+function post(body, route = "/api/ghosts") {
+  return fetch(`${base}${route}`, {
     method: "POST",
     headers: { "content-type": "application/json" },
     body: typeof body === "string" ? body : JSON.stringify(body),
@@ -107,5 +116,38 @@ test("never serves secrets or server code", async () => {
     "/css/..%2f.env", "/js/%2e%2e/.env", "/%E0%A4%A", "/js"]) {
     const res = await fetch(base + p);
     assert.ok([400, 404].includes(res.status), `${p} returned ${res.status}`);
+  }
+});
+
+const itemsGame = {
+  maze: game.maze,
+  pacman: game.pacman,
+  ghosts: [{ x: 4, y: 1 }],
+  items: [{ kind: "anime", x: 7, y: 1 }],
+  level: 2,
+  secondsSinceSpawn: 5.5,
+  effects: ["chores"],
+};
+
+test("POST /api/items returns the item director's decision", async () => {
+  const res = await post(itemsGame, "/api/items");
+  assert.equal(res.status, 200);
+  assert.deepEqual(await res.json(), { spawn: { kind: "homework", x: 1, y: 1 } });
+  assert.deepEqual(itemCalls.at(-1), itemsGame);
+});
+
+test("rejects bad item requests with 400", async () => {
+  const cases = [
+    { ...itemsGame, level: 0 },
+    { ...itemsGame, level: 6 },
+    { ...itemsGame, items: [{ kind: "tiktok", x: 1, y: 1 }] },
+    { ...itemsGame, secondsSinceSpawn: -1 },
+    { ...itemsGame, effects: ["nap"] },
+    { ...itemsGame, ghosts: "none" },
+    { ...itemsGame, pacman: null },
+  ];
+  for (const body of cases) {
+    const res = await post(body, "/api/items");
+    assert.equal(res.status, 400, `expected 400 for ${JSON.stringify(body).slice(0, 80)}`);
   }
 });

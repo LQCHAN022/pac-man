@@ -5,13 +5,13 @@
 // is late, the ghost takes the arcade move at that junction instead.
 //
 // Reads LAYOUT (board.js) and Pac-Man's `state` (pacman.js); loaded as a
-// module so it runs after both. Difficulty comes from the page URL,
-// e.g. index.html?difficulty=hard (easy | normal | hard).
+// module so it runs after both. Speed and AI difficulty follow the current
+// level and buffs/debuffs in globalThis.GAME (js/director.js).
 
 import { BEHAVIOURS, resolveBehaviour } from "./ghost-ai/behaviours.js";
 import { closestMove, legalMoves, step } from "./ghost-ai/maze.js";
 
-const STEP_MS = 200; // a little slower than Pac-Man's 150ms
+const DEFAULT_STEP_MS = 200; // used until js/director.js sets a level
 const HOUSE_EXIT = { x: 13, y: 11 }; // tile just above the ghost house door
 const MAX_LOOKAHEAD = 40; // tiles to follow a corridor when looking for the next junction
 
@@ -23,7 +23,8 @@ const MODE_SCHEDULE = [
   { mode: "chase", ms: Infinity },
 ];
 
-const difficulty = new URLSearchParams(location.search).get("difficulty") || "normal";
+const stepMs = () => (globalThis.GAME?.level?.ghostStepMs ?? DEFAULT_STEP_MS) / (globalThis.GAME?.ghostSpeed || 1);
+const aiDifficulty = () => globalThis.GAME?.level?.ai ?? "normal";
 
 const ghosts = [
   { name: "blinky", behaviour: "chase",  x: 13, y: 11, direction: "left", home: { x: 26, y: 1 },  releaseMs: 0 },
@@ -47,7 +48,7 @@ const keyOf = ({ x, y, direction }) => `${x},${y},${direction}`;
 
 function render(ghost, animate) {
   ghost.el.style.gridArea = "1 / 1";
-  ghost.el.style.transition = animate ? `transform ${STEP_MS}ms linear` : "none";
+  ghost.el.style.transition = animate ? `transform ${stepMs()}ms linear` : "none";
   ghost.el.style.transform = `translate(calc(var(--cell) * ${ghost.x}), calc(var(--cell) * ${ghost.y}))`;
 }
 
@@ -112,7 +113,7 @@ async function askAhead() {
       method: "POST",
       headers: { "content-type": "application/json" },
       body: JSON.stringify({
-        difficulty,
+        difficulty: aiDifficulty(),
         mode: currentMode(),
         maze: LAYOUT,
         pacman: pacmanTile(),
@@ -162,6 +163,9 @@ function tick() {
     render(ghost, !wrapped); // jump instead of sliding across the board when wrapping
   }
   askAhead();
+  // Let js/director.js keep items away from ghosts.
+  if (globalThis.GAME) globalThis.GAME.ghosts = activeGhosts().map(({ name, x, y }) => ({ name, x, y }));
+  setTimeout(tick, stepMs()); // re-read every step, so level and buffs apply at once
 }
 
 ghosts.forEach((ghost) => render(ghost, false));
@@ -172,5 +176,4 @@ const waitForStart = setInterval(() => {
   clearInterval(waitForStart);
   startedAt = Date.now();
   tick();
-  setInterval(tick, STEP_MS);
 }, 50);

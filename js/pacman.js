@@ -5,7 +5,9 @@ const ready = document.querySelector(".ready");
 const scoreEl = document.getElementById("score");
 const highScoreEl = document.getElementById("high-score");
 
-const STEP_MS = 150; // time to cross one tile
+const STEP_MS = 150; // time to cross one tile at normal speed
+// Buffs/debuffs (js/director.js) set window.GAME.pacmanSpeed: 2 = twice as fast.
+const stepMs = () => STEP_MS / (window.GAME?.pacmanSpeed || 1);
 const SWIPE_MIN_PX = 20;
 
 // Arcade point values.
@@ -55,7 +57,7 @@ function canMove(dir) {
 }
 
 function render(animate) {
-  pacman.style.transition = animate ? `transform ${STEP_MS}ms linear` : "none";
+  pacman.style.transition = animate ? `transform ${stepMs()}ms linear` : "none";
   pacman.style.transform =
     `translate(calc(var(--cell) * ${state.x}), calc(var(--cell) * ${state.y})) rotate(${state.angle}deg)`;
 }
@@ -94,14 +96,21 @@ function step() {
   state.angle = angle;
   render(!wrapped); // jump instead of sliding across the board when wrapping
   eatPellet();
+  document.dispatchEvent(new CustomEvent("pacman:moved", { detail: { x: state.x, y: state.y } }));
+}
+
+// Re-reads the speed every step, so buffs take effect straight away.
+function loop() {
+  step();
+  state.timer = setTimeout(loop, stepMs());
 }
 
 function requestDirection(dir) {
   state.queued = dir;
   if (!state.timer) {
     ready.hidden = true;
-    step();
-    state.timer = setInterval(step, STEP_MS);
+    document.dispatchEvent(new Event("game:start"));
+    loop();
   }
 }
 
