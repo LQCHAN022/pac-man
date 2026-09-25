@@ -35,7 +35,7 @@ const ghosts = [
   released: ghost.releaseMs === 0,
   askedFor: null, // key of the junction we last asked Jev about
   plan: null,     // Jev's answer: { key, move }
-  el: document.querySelector(`.sprite--ghost[alt="${ghost.name[0].toUpperCase()}${ghost.name.slice(1)}"]`),
+  el: document.querySelector(`.sprite--ghost[data-ghost="${ghost.name}"]`),
 }));
 
 let startedAt = null;

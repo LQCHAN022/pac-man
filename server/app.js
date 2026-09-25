@@ -17,6 +17,10 @@ const CONTENT_TYPES = {
   ".js": "text/javascript; charset=utf-8",
   ".svg": "image/svg+xml",
   ".png": "image/png",
+  ".jpg": "image/jpeg",
+  ".jpeg": "image/jpeg",
+  ".jfif": "image/jpeg",
+  ".webp": "image/webp",
   ".ico": "image/x-icon",
 };
 

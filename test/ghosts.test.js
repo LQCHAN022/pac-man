@@ -21,7 +21,7 @@ beforeEach(() => {
   globalThis.state = { x: 13, y: 23, dir: "left", timer: 1 }; // Pac-Man already started
   globalThis.location = { search: "" };
   globalThis.document = {
-    querySelector: (selector) => elements[selector.match(/alt="(\w+)"/)[1].toLowerCase()],
+    querySelector: (selector) => elements[selector.match(/data-ghost="(\w+)"/)[1]],
   };
 });
 
@@ -122,6 +122,13 @@ test("ghosts keep moving when the server is down", async () => {
   assert.equal(requests, 1, "stops asking after the first failure");
   assert.equal(warn.mock.callCount(), 1);
   warn.mock.restore();
+});
+
+test("index.html has an image for every ghost", () => {
+  const html = readFileSync(new URL("../index.html", import.meta.url), "utf8");
+  for (const name of NAMES) {
+    assert.match(html, new RegExp(`class="[^"]*sprite--ghost[^"]*"[^>]*data-ghost="${name.toLowerCase()}"`), name);
+  }
 });
 
 test("ghosts leave the house on their release schedule", async () => {
