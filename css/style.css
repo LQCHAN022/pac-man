@@ -84,6 +84,13 @@ body {
   pointer-events: none;
 }
 
+/* Photo ghosts: crop to a circle so any image shape fits the sprite. */
+.sprite--portrait {
+  border-radius: 50%;
+  object-fit: cover;
+  box-shadow: 0 0 0 2px var(--door);
+}
+
 .ready {
   z-index: 1;
   place-self: center;
