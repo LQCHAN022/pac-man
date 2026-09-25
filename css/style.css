@@ -44,6 +44,7 @@ body {
   display: grid;
   grid-template-columns: repeat(var(--cols), var(--cell));
   grid-template-rows: repeat(var(--rows), var(--cell));
+  touch-action: none; /* swipes steer Pac-Man instead of scrolling */
 }
 
 .tile { position: relative; }

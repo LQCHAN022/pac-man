@@ -44,13 +44,15 @@ const TILE_CLASS = {
 const board = document.getElementById("board");
 const fragment = document.createDocumentFragment();
 
-LAYOUT.forEach((row, y) => {
-  [...row].forEach((char, x) => {
+// Tile elements indexed as TILES[y][x], so game code can update them.
+const TILES = LAYOUT.map((row, y) =>
+  [...row].map((char, x) => {
     const tile = document.createElement("div");
     tile.className = "tile " + (TILE_CLASS[char] || "tile--empty");
     tile.style.gridArea = `${y + 1} / ${x + 1}`;
     fragment.appendChild(tile);
-  });
-});
+    return tile;
+  })
+);
 
 board.prepend(fragment);
