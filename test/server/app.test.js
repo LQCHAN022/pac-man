@@ -101,7 +101,7 @@ test("serves the frontend files", async () => {
   const index = await fetch(`${base}/`);
   assert.equal(index.status, 200);
   assert.match(index.headers.get("content-type"), /text\/html/);
-  assert.match(await index.text(), /js\/ghosts\.js/);
+  assert.match(await index.text(), /js\/game\.js/);
 
   const script = await fetch(`${base}/js/ghost-ai/maze.js`);
   assert.equal(script.status, 200);

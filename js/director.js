@@ -227,3 +227,11 @@ document.addEventListener("game:start", () => {
   setInterval(update, UI_EVERY_MS);
   setInterval(askForItem, ASK_EVERY_MS);
 }, { once: true });
+
+// New game after game over (js/game.js): back to level 1 with no items or effects.
+document.addEventListener("game:restart", () => {
+  startedAt = lastSpawnAt = Date.now();
+  [...items].forEach(removeItem);
+  effects = [];
+  update();
+});

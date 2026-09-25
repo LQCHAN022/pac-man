@@ -1,5 +1,7 @@
 // Pac-Man movement. Arrow keys / WASD on keyboard, swipe on touch screens.
 // Reads LAYOUT and TILES from board.js, so this script must load after it.
+// Game rules live in game.js, which listens for the events fired here:
+//   pacman:moved  after every step        pacman:power  on eating a power pellet
 const pacman = document.querySelector(".sprite--pacman");
 const ready = document.querySelector(".ready");
 const scoreEl = document.getElementById("score");
@@ -18,6 +20,7 @@ const PELLET_POINTS = {
 
 let score = 0;
 let highScore = Number(highScoreEl.textContent);
+let pelletsLeft = countPellets();
 
 const DIRECTIONS = {
   up:    { dx: 0,  dy: -1, angle: -90 },
@@ -33,13 +36,15 @@ const KEY_TO_DIRECTION = {
   ArrowRight: "right", d: "right",
 };
 
+const START = { x: 13, y: 23 };
+
 const state = {
-  x: 13,
-  y: 23,
+  ...START,
   dir: null,    // direction Pac-Man is currently moving
   queued: null, // last requested direction, taken as soon as the path opens
   angle: 0,
   timer: null,
+  paused: false, // set by game.js while dying, clearing a level or on game over
 };
 
 // Columns wrap so the side tunnel on row 14 leads to the other edge.
@@ -67,9 +72,32 @@ function eatPellet() {
   for (const [pelletClass, points] of Object.entries(PELLET_POINTS)) {
     if (!tile.classList.contains(pelletClass)) continue;
     tile.classList.replace(pelletClass, "tile--empty");
+    pelletsLeft--;
     addScore(points);
+    if (pelletClass === "tile--power") document.dispatchEvent(new CustomEvent("pacman:power"));
     return;
   }
+}
+
+function countPellets() {
+  return TILES.flat().filter((tile) =>
+    Object.keys(PELLET_POINTS).some((pelletClass) => tile.classList.contains(pelletClass))
+  ).length;
+}
+
+function resetPellets() {
+  paintTiles();
+  pelletsLeft = countPellets();
+}
+
+function resetPacman() {
+  Object.assign(state, START, { dir: null, queued: null, angle: 0 });
+  render(false);
+}
+
+function resetScore() {
+  score = 0;
+  scoreEl.textContent = "00";
 }
 
 function addScore(points) {
@@ -82,6 +110,7 @@ function addScore(points) {
 }
 
 function step() {
+  if (state.paused) return;
   if (state.queued && canMove(state.queued)) {
     state.dir = state.queued;
     state.queued = null;

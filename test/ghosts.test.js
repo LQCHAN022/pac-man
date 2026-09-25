@@ -16,7 +16,7 @@ let run = 0;
 beforeEach(() => {
   mock.timers.reset();
   mock.timers.enable({ apis: ["setInterval", "setTimeout", "Date"], now: 0 });
-  elements = Object.fromEntries(NAMES.map((n) => [n.toLowerCase(), { style: {} }]));
+  elements = Object.fromEntries(NAMES.map((n) => [n.toLowerCase(), fakeSprite(`assets/${n.toLowerCase()}.jfif`)]));
   globalThis.LAYOUT = LAYOUT;
   globalThis.state = { x: 13, y: 23, dir: "left", timer: 1 }; // Pac-Man already started
   globalThis.location = { search: "" };
@@ -25,9 +25,23 @@ beforeEach(() => {
   };
 });
 
+function fakeSprite(src) {
+  const classes = new Set(["sprite", "sprite--ghost", "sprite--portrait"]);
+  return {
+    style: {},
+    src,
+    getAttribute: (name) => (name === "src" ? src : null),
+    classList: {
+      contains: (c) => classes.has(c),
+      remove: (c) => classes.delete(c),
+      toggle: (c, on) => (on ? classes.add(c) : classes.delete(c)),
+    },
+  };
+}
+
 // Fresh copy of the module per test (it starts running on import).
 async function startGhosts() {
-  await import(`../js/ghosts.js?run=${++run}`);
+  return import(`../js/ghosts.js?run=${++run}`);
 }
 
 function position(name) {
@@ -139,4 +153,65 @@ test("ghosts leave the house on their release schedule", async () => {
   assert.deepEqual(position("clyde"), start, "clyde is still home at 6s");
   await advance(1600);
   assert.notDeepEqual(position("clyde"), start, "clyde is out after 7s");
+});
+
+test("paused ghosts stand still", async () => {
+  fakeServer(20);
+  await startGhosts();
+  await advance(60);
+  globalThis.state.paused = true;
+  const before = position("blinky");
+  await advance(STEP_MS * 5);
+  assert.deepEqual(position("blinky"), before);
+});
+
+test("frightened ghosts turn blue, reverse, move at half speed and recover", async () => {
+  fakeServer(20);
+  const { frighten, isFrightened, ghosts } = await startGhosts();
+  await advance(60 + STEP_MS * 3);
+  const blinky = ghosts.find((g) => g.name === "blinky");
+  const heading = blinky.direction;
+
+  frighten(3000);
+  assert.ok(isFrightened(blinky));
+  assert.equal(elements.blinky.src, "assets/ghost-frightened.svg");
+  assert.equal(elements.blinky.classList.contains("sprite--portrait"), false);
+  assert.notEqual(blinky.direction, heading, "reverses when frightened");
+
+  let moves = 0;
+  for (let i = 0; i < 10; i++) {
+    const before = position("blinky");
+    await advance(STEP_MS);
+    if (JSON.stringify(position("blinky")) !== JSON.stringify(before)) moves++;
+  }
+  assert.equal(moves, 5, "moves every other tick");
+  assert.ok(elements.blinky.classList.contains("sprite--flashing"), "flashes near the end");
+
+  await advance(1200);
+  assert.equal(isFrightened(blinky), false);
+  assert.equal(elements.blinky.src, "assets/blinky.jfif", "portrait is back");
+  assert.ok(elements.blinky.classList.contains("sprite--portrait"));
+});
+
+test("eaten ghosts respawn in the house and come back out", async () => {
+  fakeServer(20);
+  const { sendHome, ghosts } = await startGhosts();
+  await advance(60 + STEP_MS * 3);
+  const blinky = ghosts.find((g) => g.name === "blinky");
+
+  sendHome(blinky);
+  assert.deepEqual(position("blinky"), { x: 13, y: 14 });
+  await advance(2800);
+  assert.deepEqual(position("blinky"), { x: 13, y: 14 }, "waits in the house");
+  await advance(600);
+  assert.notDeepEqual(position("blinky"), { x: 13, y: 14 }, "out again after 3s");
+});
+
+test("move listeners run after every ghost tick", async () => {
+  fakeServer(20);
+  const { onGhostsMoved } = await startGhosts();
+  let calls = 0;
+  onGhostsMoved(() => calls++);
+  await advance(60 + STEP_MS * 4);
+  assert.ok(calls >= 4, `expected a call per tick, saw ${calls}`);
 });

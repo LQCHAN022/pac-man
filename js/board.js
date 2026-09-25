@@ -48,11 +48,21 @@ const fragment = document.createDocumentFragment();
 const TILES = LAYOUT.map((row, y) =>
   [...row].map((char, x) => {
     const tile = document.createElement("div");
-    tile.className = "tile " + (TILE_CLASS[char] || "tile--empty");
     tile.style.gridArea = `${y + 1} / ${x + 1}`;
     fragment.appendChild(tile);
     return tile;
   })
 );
+
+// Sets every tile back to its LAYOUT look, restoring eaten pellets.
+function paintTiles() {
+  LAYOUT.forEach((row, y) => {
+    [...row].forEach((char, x) => {
+      TILES[y][x].className = "tile " + (TILE_CLASS[char] || "tile--empty");
+    });
+  });
+}
+
+paintTiles();
 
 board.prepend(fragment);

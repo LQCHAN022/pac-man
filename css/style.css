@@ -104,12 +104,33 @@ body {
   box-shadow: 0 0 0 2px var(--door);
 }
 
+/* Frightened ghosts flash white shortly before they recover. */
+.sprite--flashing { animation: ghost-flash 0.4s steps(1) infinite; }
+@keyframes ghost-flash {
+  50% { filter: brightness(0) invert(1); }
+}
+
+/* Uses the individual scale/rotate properties so the inline transform
+   that positions Pac-Man is left alone. */
+.sprite--dying { animation: pacman-dying 1.2s ease-in forwards; }
+@keyframes pacman-dying {
+  to { scale: 0; rotate: 540deg; }
+}
+
+/* Level clear: walls flash white. */
+.board--cleared .tile--wall { animation: wall-flash 0.4s steps(1) infinite; }
+@keyframes wall-flash {
+  50% { box-shadow: inset 0 0 0 2px var(--text); }
+}
+
 .ready {
   z-index: 1;
   place-self: center;
   color: var(--accent);
   font-size: calc(var(--cell) * 0.8);
+  white-space: nowrap;
 }
+.ready--game-over { color: #FF0000; }
 
 /* ---------- Footer ---------- */
 .status {
