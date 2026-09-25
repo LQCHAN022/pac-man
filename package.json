@@ -4,10 +4,11 @@
   "private": true,
   "type": "module",
   "scripts": {
+    "start": "node server/index.js",
     "test": "node --test"
   },
   "engines": {
-    "node": ">=20"
+    "node": ">=20.12"
   },
   "dependencies": {
     "@typesafe-ai/sdk": "^0.6.0"
