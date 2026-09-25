@@ -1,0 +1,104 @@
+:root {
+  --cols: 28;
+  --rows: 31;
+  --cell: min(20px, calc((100vw - 32px) / 28), calc((100vh - 140px) / 31));
+  --bg: #000;
+  --wall: #2121DE;
+  --pellet: #FFB8AE;
+  --text: #fff;
+  --accent: #FFE600;
+  --door: #FFB8FF;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--bg);
+  color: var(--text);
+  font-family: "Press Start 2P", monospace;
+}
+
+.game {
+  width: calc(var(--cell) * var(--cols));
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+/* ---------- HUD ---------- */
+.hud {
+  display: flex;
+  justify-content: space-between;
+  font-size: calc(var(--cell) * 0.6);
+}
+.hud__block { display: flex; flex-direction: column; gap: 4px; }
+.hud__block:last-child { text-align: right; }
+.hud__value { color: var(--text); }
+
+/* ---------- Board ---------- */
+.board {
+  display: grid;
+  grid-template-columns: repeat(var(--cols), var(--cell));
+  grid-template-rows: repeat(var(--rows), var(--cell));
+}
+
+.tile { position: relative; }
+
+.tile--wall {
+  background: var(--bg);
+  box-shadow: inset 0 0 0 2px var(--wall);
+  border-radius: 3px;
+}
+
+.tile--door::after {
+  content: "";
+  position: absolute;
+  left: 0; right: 0; top: 45%;
+  height: 10%;
+  background: var(--door);
+}
+
+.tile--pellet::after,
+.tile--power::after {
+  content: "";
+  position: absolute;
+  top: 50%; left: 50%;
+  transform: translate(-50%, -50%);
+  border-radius: 50%;
+  background: var(--pellet);
+}
+.tile--pellet::after { width: 20%; height: 20%; }
+.tile--power::after  { width: 60%; height: 60%; }
+
+/* ---------- Sprites ---------- */
+.sprite {
+  z-index: 1;
+  width: calc(var(--cell) * 1.6);
+  height: calc(var(--cell) * 1.6);
+  place-self: center;
+  pointer-events: none;
+}
+
+.ready {
+  z-index: 1;
+  place-self: center;
+  color: var(--accent);
+  font-size: calc(var(--cell) * 0.8);
+}
+
+/* ---------- Footer ---------- */
+.status {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.lives, .fruit { display: flex; gap: 6px; }
+.lives img, .fruit img {
+  width: calc(var(--cell) * 1.4);
+  height: calc(var(--cell) * 1.4);
+}
+.lives img { transform: scaleX(-1); }

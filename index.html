@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Pac-Man</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <main class="game">
+    <header class="hud">
+      <div class="hud__block">
+        <span class="hud__label">1UP</span>
+        <span class="hud__value" id="score">00</span>
+      </div>
+      <div class="hud__block">
+        <span class="hud__label">HIGH SCORE</span>
+        <span class="hud__value" id="high-score">10000</span>
+      </div>
+    </header>
+
+    <section class="board" id="board" aria-label="Game board">
+      <!-- Maze tiles are rendered from the layout in js/board.js -->
+
+      <!-- Static sprite placements (wireframe only) -->
+      <img class="sprite sprite--ghost" src="assets/ghost-blinky.svg" alt="Blinky" style="grid-area: 12 / 14 / span 1 / span 2">
+      <img class="sprite sprite--ghost" src="assets/ghost-inky.svg"   alt="Inky"   style="grid-area: 15 / 12 / span 1 / span 2">
+      <img class="sprite sprite--ghost" src="assets/ghost-pinky.svg"  alt="Pinky"  style="grid-area: 15 / 14 / span 1 / span 2">
+      <img class="sprite sprite--ghost" src="assets/ghost-clyde.svg"  alt="Clyde"  style="grid-area: 15 / 16 / span 1 / span 2">
+      <img class="sprite sprite--pacman" src="assets/pacman.svg"      alt="Pac-Man" style="grid-area: 24 / 14 / span 1 / span 2">
+      <div class="ready" style="grid-area: 18 / 11 / span 1 / span 8">READY!</div>
+    </section>
+
+    <footer class="status">
+      <div class="lives" aria-label="Lives">
+        <img src="assets/pacman.svg" alt="">
+        <img src="assets/pacman.svg" alt="">
+      </div>
+      <div class="fruit" aria-label="Level fruit">
+        <img src="assets/cherry.svg" alt="Cherry">
+      </div>
+    </footer>
+  </main>
+
+  <script src="js/board.js"></script>
+</body>
+</html>
