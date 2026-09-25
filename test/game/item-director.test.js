@@ -1,7 +1,8 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { TypeSafeClient } from "@typesafe-ai/sdk";
-import { createItemDirector, pickKind } from "../../js/game/item-director.js";
+import { JEV_NUDGE, createItemDirector, pickKind } from "../../js/game/item-director.js";
+import { LEVELS } from "../../js/game/levels.js";
 import { ITEMS } from "../../js/game/items.js";
 
 const MAZE = [
@@ -94,18 +95,37 @@ test("Jev's yes has to be confident: 0.75 is not enough", async () => {
 const rolls = (...values) => () => values.shift() ?? 0;
 const kindAnswer = (probabilities) => ({ type: "choice", choice: Object.keys(probabilities)[0], probabilities });
 
-test("follows Jev's lean toward buffs when Pac-Man is in danger", () => {
-  // Jev: 90% homework. Level 1: 30% distractions. Blend: (0.1 + 2 * 0.3) / 3 = 23% distraction.
-  const answer = kindAnswer({ homework: 0.9, anime: 0.1 });
-  assert.equal(pickKind(answer, 1, rolls(0.5, 0.3)), "homework");
-  assert.equal(ITEMS[pickKind(answer, 1, rolls(0.22, 0))].type, "distraction");
+test("Jev can nudge toward buffs when Pac-Man is in danger", () => {
+  // Level 1 share is 0.65. Jev leaning 90% buff moves it to 0.57; 90% debuff to 0.73.
+  const buffLean = kindAnswer({ homework: 0.9, anime: 0.1 });
+  const debuffLean = kindAnswer({ homework: 0.1, anime: 0.9 });
+  assert.equal(pickKind(buffLean, 1, rolls(0.6, 0.3)), "homework");
+  assert.equal(pickKind(debuffLean, 1, rolls(0.6, 0.3)), "anime");
 });
 
-test("higher levels tilt Jev's flat answers toward distractions", () => {
+test("higher levels bring more distractions", () => {
   const flat = kindAnswer(Object.fromEntries(Object.keys(ITEMS).map((k) => [k, 1 / 8])));
-  // Same roll of 0.55. Level 1: (0.5 + 2 * 0.3) / 3 = 0.37; level 5: (0.5 + 2 * 0.7) / 3 = 0.63.
-  assert.equal(ITEMS[pickKind(flat, 1, rolls(0.55, 0))].type, "responsibility");
-  assert.equal(ITEMS[pickKind(flat, 5, rolls(0.55, 0))].type, "distraction");
+  // A neutral Jev leaves the level's share as is: 0.65 at level 1, 0.9 at level 5.
+  assert.equal(ITEMS[pickKind(flat, 1, rolls(0.75, 0))].type, "responsibility");
+  assert.equal(ITEMS[pickKind(flat, 5, rolls(0.75, 0))].type, "distraction");
+});
+
+test("debuffs outnumber buffs at every level, even when Jev leans fully toward buffs", () => {
+  const allBuffs = kindAnswer({ homework: 1 });
+  let previous = 0;
+  for (let level = 1; level <= LEVELS.length; level++) {
+    let debuffs = 0;
+    const n = 1000;
+    for (let i = 0; i < n; i++) {
+      // Evenly spaced rolls give the exact share without randomness in the test.
+      if (ITEMS[pickKind(allBuffs, level, rolls((i + 0.5) / n, 0))].type === "distraction") debuffs++;
+    }
+    const share = debuffs / n;
+    assert.ok(share > 0.5, `level ${level}: ${share} debuffs`);
+    assert.ok(share > previous, `level ${level} has more debuffs than level ${level - 1}`);
+    assert.ok(Math.abs(share - (LEVELS[level - 1].distractionChance - JEV_NUDGE)) < 0.01);
+    previous = share;
+  }
 });
 
 test("samples items instead of always taking Jev's top pick", () => {

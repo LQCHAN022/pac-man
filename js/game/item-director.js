@@ -12,8 +12,7 @@
 //
 // Jev's answers are blended with the level rather than taken verbatim:
 // its item probabilities are fairly flat, so always taking the top one
-// repeats the same item, and it doesn't reliably ramp distractions up with
-// the level. Guard rails in spawn-rules.js keep the game playable whatever
+// repeats the same item, and it leans toward buffs whatever the level. Guard rails in spawn-rules.js keep the game playable whatever
 // Jev says, and the random fallback takes over if Jev is unreachable.
 
 import { choice, noul } from "@typesafe-ai/sdk";
@@ -75,9 +74,12 @@ export function createItemDirector({ client, random = Math.random, onError } = {
   return { decide };
 }
 
-// Chooses buff vs debuff from Jev's lean and the level's distraction rate
-// (the level counts twice, so the ramp holds even when Jev leans toward
-// buffs), then samples an item of that type by Jev's probabilities.
+// Jev can move the level's distraction share by at most this much, e.g.
+// toward buffs when a ghost is closing in.
+export const JEV_NUDGE = 0.1;
+
+// Chooses buff vs debuff from the level's distraction share, nudged by Jev's
+// lean, then samples an item of that type by Jev's probabilities.
 export function pickKind(answer, level, random = Math.random) {
   const probabilities = answer?.probabilities;
   if (!probabilities) return Object.hasOwn(ITEMS, answer?.choice) ? answer.choice : randomKind(level, random);
@@ -88,7 +90,8 @@ export function pickKind(answer, level, random = Math.random) {
     ? total("distraction") / (total("distraction") + total("responsibility"))
     : 0.5;
   const { distractionChance } = LEVELS[Math.min(Math.max(level, 1), LEVELS.length) - 1];
-  const type = random() < (jevLean + 2 * distractionChance) / 3 ? "distraction" : "responsibility";
+  const share = distractionChance + (jevLean - 0.5) * 2 * JEV_NUDGE;
+  const type = random() < share ? "distraction" : "responsibility";
 
   const kinds = itemsOfType(type);
   const weights = kinds.map(weight);

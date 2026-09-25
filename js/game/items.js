@@ -7,10 +7,10 @@ export const ITEM_LIFETIME_MS = 12000;
 
 // Speed multipliers applied while an effect is active.
 export const EFFECTS = {
-  pacmanFaster: { target: "pacman", multiplier: 1.4, label: "You speed up" },
-  pacmanSlower: { target: "pacman", multiplier: 0.65, label: "You slow down" },
-  ghostsSlower: { target: "ghosts", multiplier: 0.7, label: "Ghosts slow down" },
-  ghostsFaster: { target: "ghosts", multiplier: 1.35, label: "Ghosts speed up" },
+  pacmanFaster: { target: "pacman", multiplier: 2,   label: "You speed up" },
+  pacmanSlower: { target: "pacman", multiplier: 0.5, label: "You slow down" },
+  ghostsSlower: { target: "ghosts", multiplier: 0.5, label: "Ghosts slow down" },
+  ghostsFaster: { target: "ghosts", multiplier: 1.8, label: "Ghosts speed up" },
 };
 
 export const ITEMS = {

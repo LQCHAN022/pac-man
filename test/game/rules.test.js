@@ -127,8 +127,15 @@ test("the fallback always spawns once MAX_GAP_S has passed", () => {
   assert.ok(spawn && Object.hasOwn(ITEMS, spawn.kind));
 });
 
+test("distractions outnumber responsibilities from level 1, and more so each level", () => {
+  assert.ok(LEVELS[0].distractionChance > 0.5);
+  for (let i = 1; i < LEVELS.length; i++) {
+    assert.ok(LEVELS[i].distractionChance > LEVELS[i - 1].distractionChance, `level ${i + 1} has more distractions`);
+  }
+});
+
 test("randomKind picks more distractions at higher levels", () => {
-  const roll = 0.5; // distractionChance is 0.3 at level 1 and 0.7 at level 5
+  const roll = 0.7; // distractionChance is 0.65 at level 1 and 0.9 at level 5
   assert.equal(ITEMS[randomKind(1, () => roll)].type, "responsibility");
   assert.equal(ITEMS[randomKind(5, () => roll)].type, "distraction");
 });
