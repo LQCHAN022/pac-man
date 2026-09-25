@@ -7,6 +7,14 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="css/style.css">
+  <script>
+    // Defined in <head> so it exists before ghost images can fail to load.
+    function useClassicGhost(img, name) {
+      img.onerror = null;
+      img.classList.remove("sprite--portrait");
+      img.src = `assets/ghost-${name}.svg`;
+    }
+  </script>
 </head>
 <body>
   <main class="game">
@@ -25,10 +33,11 @@
       <!-- Maze tiles are rendered from the layout in js/board.js -->
 
       <!-- Static sprite placements (wireframe only) -->
-      <img class="sprite sprite--ghost" src="assets/ghost-blinky.svg" alt="Blinky" style="grid-area: 12 / 14 / span 1 / span 2">
-      <img class="sprite sprite--ghost" src="assets/ghost-inky.svg"   alt="Inky"   style="grid-area: 15 / 12 / span 1 / span 2">
-      <img class="sprite sprite--ghost" src="assets/ghost-pinky.svg"  alt="Pinky"  style="grid-area: 15 / 14 / span 1 / span 2">
-      <img class="sprite sprite--ghost" src="assets/ghost-clyde.svg"  alt="Clyde"  style="grid-area: 15 / 16 / span 1 / span 2">
+      <!-- Ghost portraits; each falls back to its classic ghost sprite if the image is missing -->
+      <img class="sprite sprite--ghost sprite--portrait" src="assets/ghost-lee-min-ho.jfif"      alt="Lee Min-ho"     title="Lee Min-ho"     onerror="useClassicGhost(this, 'blinky')" style="grid-area: 12 / 14 / span 1 / span 2">
+      <img class="sprite sprite--ghost sprite--portrait" src="assets/ghost-park-seo-joon.jfif"   alt="Park Seo-joon"  title="Park Seo-joon"  onerror="useClassicGhost(this, 'inky')"   style="grid-area: 15 / 12 / span 1 / span 2">
+      <img class="sprite sprite--ghost sprite--portrait" src="assets/ghost-hyun-bin.jfif"        alt="Hyun Bin"       title="Hyun Bin"       onerror="useClassicGhost(this, 'pinky')"  style="grid-area: 15 / 14 / span 1 / span 2">
+      <img class="sprite sprite--ghost sprite--portrait" src="assets/ghost-ji-chang-wook.jfif"   alt="Ji Chang-wook"  title="Ji Chang-wook"  onerror="useClassicGhost(this, 'clyde')"  style="grid-area: 15 / 16 / span 1 / span 2">
       <img class="sprite sprite--pacman" src="assets/pacman.svg"      alt="Pac-Man" style="grid-area: 1 / 1">
       <div class="ready" style="grid-area: 18 / 11 / span 1 / span 8">READY!</div>
     </section>
